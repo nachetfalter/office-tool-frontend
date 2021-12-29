@@ -1,22 +1,22 @@
 {
   "files": {
-    "main.css": "/home/static/css/main.5e05ef94.chunk.css",
-    "main.js": "/home/static/js/main.05d1fe40.chunk.js",
-    "main.js.map": "/home/static/js/main.05d1fe40.chunk.js.map",
-    "runtime-main.js": "/home/static/js/runtime-main.3bb1ee0b.js",
-    "runtime-main.js.map": "/home/static/js/runtime-main.3bb1ee0b.js.map",
-    "static/js/2.876db54f.chunk.js": "/home/static/js/2.876db54f.chunk.js",
-    "static/js/2.876db54f.chunk.js.map": "/home/static/js/2.876db54f.chunk.js.map",
-    "static/js/3.f6bd6f0b.chunk.js": "/home/static/js/3.f6bd6f0b.chunk.js",
-    "static/js/3.f6bd6f0b.chunk.js.map": "/home/static/js/3.f6bd6f0b.chunk.js.map",
-    "index.html": "/home/index.html",
-    "static/css/main.5e05ef94.chunk.css.map": "/home/static/css/main.5e05ef94.chunk.css.map",
-    "static/js/2.876db54f.chunk.js.LICENSE.txt": "/home/static/js/2.876db54f.chunk.js.LICENSE.txt"
+    "main.css": "/office-tool-frontend/static/css/main.5e05ef94.chunk.css",
+    "main.js": "/office-tool-frontend/static/js/main.bdc573d0.chunk.js",
+    "main.js.map": "/office-tool-frontend/static/js/main.bdc573d0.chunk.js.map",
+    "runtime-main.js": "/office-tool-frontend/static/js/runtime-main.7baba83c.js",
+    "runtime-main.js.map": "/office-tool-frontend/static/js/runtime-main.7baba83c.js.map",
+    "static/js/2.505b5cb7.chunk.js": "/office-tool-frontend/static/js/2.505b5cb7.chunk.js",
+    "static/js/2.505b5cb7.chunk.js.map": "/office-tool-frontend/static/js/2.505b5cb7.chunk.js.map",
+    "static/js/3.f6bd6f0b.chunk.js": "/office-tool-frontend/static/js/3.f6bd6f0b.chunk.js",
+    "static/js/3.f6bd6f0b.chunk.js.map": "/office-tool-frontend/static/js/3.f6bd6f0b.chunk.js.map",
+    "index.html": "/office-tool-frontend/index.html",
+    "static/css/main.5e05ef94.chunk.css.map": "/office-tool-frontend/static/css/main.5e05ef94.chunk.css.map",
+    "static/js/2.505b5cb7.chunk.js.LICENSE.txt": "/office-tool-frontend/static/js/2.505b5cb7.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.3bb1ee0b.js",
-    "static/js/2.876db54f.chunk.js",
+    "static/js/runtime-main.7baba83c.js",
+    "static/js/2.505b5cb7.chunk.js",
     "static/css/main.5e05ef94.chunk.css",
-    "static/js/main.05d1fe40.chunk.js"
+    "static/js/main.bdc573d0.chunk.js"
   ]
 }
