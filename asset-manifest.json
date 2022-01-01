@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/office-tool-frontend/static/css/main.5e05ef94.chunk.css",
-    "main.js": "/office-tool-frontend/static/js/main.b96c3269.chunk.js",
-    "main.js.map": "/office-tool-frontend/static/js/main.b96c3269.chunk.js.map",
+    "main.js": "/office-tool-frontend/static/js/main.952dbf62.chunk.js",
+    "main.js.map": "/office-tool-frontend/static/js/main.952dbf62.chunk.js.map",
     "runtime-main.js": "/office-tool-frontend/static/js/runtime-main.7baba83c.js",
     "runtime-main.js.map": "/office-tool-frontend/static/js/runtime-main.7baba83c.js.map",
     "static/js/2.7269a260.chunk.js": "/office-tool-frontend/static/js/2.7269a260.chunk.js",
@@ -17,6 +17,6 @@
     "static/js/runtime-main.7baba83c.js",
     "static/js/2.7269a260.chunk.js",
     "static/css/main.5e05ef94.chunk.css",
-    "static/js/main.b96c3269.chunk.js"
+    "static/js/main.952dbf62.chunk.js"
   ]
 }
