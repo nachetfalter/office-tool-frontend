@@ -1,13 +1,10 @@
 import { render, act, screen, cleanup, fireEvent, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import axios from 'axios';
-import download from 'downloadjs';
 import PdfSplit from './PdfSplit';
 
 jest.mock('axios');
-jest.mock('downloadjs');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
-download as jest.Mocked<typeof download>;
 
 describe('PdfSplit', () => {
   beforeEach(() => {
@@ -83,6 +80,8 @@ describe('PdfSplit', () => {
         data: new ArrayBuffer(8),
       }),
     );
+
+    global.URL.createObjectURL = jest.fn();
 
     const pageNameInput = screen.getByLabelText('Output Page Name');
     if (pageNameInput) {

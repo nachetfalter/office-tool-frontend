@@ -3,7 +3,6 @@ import { Button, TextField, SelectChangeEvent, Snackbar, Alert, SnackbarCloseRea
 import LoadingButton from '@mui/lab/LoadingButton';
 import { UploadFile, Send } from '@mui/icons-material';
 import axios, { AxiosRequestConfig } from 'axios';
-import download from 'downloadjs';
 import { CustomisedInput, CustomisedFormControl, CustomisedCard, Title } from './PdfSplit.styled';
 import Select from '../../../common/Select';
 
@@ -54,13 +53,20 @@ const PdfSplit = (): JSX.Element => {
     formData.append('pageName', pageName);
     formData.append('pageOptions', JSON.stringify({ split: pageOption }));
     const headers = {
-      headers: { 'content-type': 'multipart/form-data' },
-      responseType: 'arraybuffer',
+      headers: { 'content-type': 'multipart/form-data', accept: 'application/octet-stream' },
     } as AxiosRequestConfig;
     axios
       .post(`${process.env.REACT_APP_BACKEND_URL}/pdf/split`, formData, headers)
       .then((response) => {
-        download(response.data, fileName.replace('.pdf', '.zip'));
+        const responseBuffer = Buffer.from(response.data, 'base64');
+
+        const url = window.URL.createObjectURL(new Blob([responseBuffer]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', fileName.replace('.pdf', '.zip'));
+        document.body.appendChild(link);
+        link.click();
+
         setFile(null);
         setFileName('Upload File');
         setShowNotification(true);
