@@ -63,6 +63,8 @@ const PdfSplit = (): JSX.Element => {
         const url = window.URL.createObjectURL(new Blob([responseBuffer]));
         const link = document.createElement('a');
         link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
         link.setAttribute('download', fileName.replace('.pdf', '.zip'));
         document.body.appendChild(link);
         link.click();

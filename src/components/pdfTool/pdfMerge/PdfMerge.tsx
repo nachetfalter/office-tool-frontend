@@ -36,35 +36,36 @@ const PdfMerge = (): JSX.Element => {
   const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsUploading('processing');
-    // const formData = new FormData();
-    // formData.append('file', file as Blob, fileName);
-    // formData.append('pageName', pageName);
-    // formData.append('pageOptions', JSON.stringify({ split: pageOption }));
-    // const headers = {
-    //   headers: { 'content-type': 'multipart/form-data', accept: 'application/octet-stream' },
-    // } as AxiosRequestConfig;
-    // axios
-    //   .post(`${process.env.REACT_APP_BACKEND_URL}/pdf/split`, formData, headers)
-    //   .then((response) => {
-    //     const responseBuffer = Buffer.from(response.data, 'base64');
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file.content as Blob, file.name));
+    formData.append('outputName', outputPdfName);
+    const headers = {
+      headers: { 'content-type': 'multipart/form-data', accept: 'application/octet-stream' },
+    } as AxiosRequestConfig;
+    axios
+      .post(`${process.env.REACT_APP_BACKEND_URL}/pdf/merge`, formData, headers)
+      .then((response) => {
+        const responseBuffer = Buffer.from(response.data, 'base64');
 
-    //     const url = window.URL.createObjectURL(new Blob([responseBuffer]));
-    //     const link = document.createElement('a');
-    //     link.href = url;
-    //     link.setAttribute('download', fileName.replace('.pdf', '.zip'));
-    //     document.body.appendChild(link);
-    //     link.click();
+        const url = window.URL.createObjectURL(new Blob([responseBuffer]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.setAttribute('download', `${outputPdfName}.pdf`);
+        document.body.appendChild(link);
+        link.click();
 
-    //     setFile(null);
-    //     setFileName('Upload File');
-    //     setShowNotification(true);
-    //   })
-    //   .catch((err) => {
-    //     console.log(err);
-    //   })
-    //   .finally(() => {
-    //     setIsUploading('initial');
-    //   });
+        setFiles([]);
+        setOutputPdfName('');
+        setShowNotification(true);
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+      .finally(() => {
+        setIsUploading('initial');
+      });
   };
 
   const clearUploadedFileHandler = (e: React.MouseEvent<HTMLInputElement>) => {
@@ -99,7 +100,7 @@ const PdfMerge = (): JSX.Element => {
         <Title variant="h3">PDF Merge Tool</Title>
         <CustomisedFormControl>
           <TextField
-            label="Output File Name"
+            label="Output PDF Name"
             value={outputPdfName}
             onChange={setOutputPdfNameHandler}
             disabled={isUploading === 'processing'}
