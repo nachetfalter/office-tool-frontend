@@ -145,7 +145,7 @@ const PdfSplit = (): JSX.Element => {
       <Snackbar
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         open={showNotification}
-        autoHideDuration={3000}
+        autoHideDuration={2000}
         onClose={closeNotificationHandler}
       >
         <Alert severity="success" sx={{ width: '100%' }}>

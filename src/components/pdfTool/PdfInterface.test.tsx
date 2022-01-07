@@ -20,10 +20,17 @@ describe('PdfInterface', () => {
 
   it('renders title', () => {
     expect(screen.getByText('PDF Utility Tool')).toBeInTheDocument();
+    expect(screen.getByText('PDF to image')).toBeInTheDocument();
+    expect(screen.getByText('Image to PDF')).toBeInTheDocument();
   });
 
-  it('navigates to link upon clicking', () => {
-    userEvent.click(screen.getByText('PDF Split'));
+  it('navigates to the split function upon clicking', () => {
+    userEvent.click(screen.getByText('PDF to image'));
     expect(global.window.location.pathname).toBe('/pdf-tool/split');
+  });
+
+  it('navigates to the split function upon clicking', () => {
+    userEvent.click(screen.getByText('Image to PDF'));
+    expect(global.window.location.pathname).toBe('/pdf-tool/merge');
   });
 });

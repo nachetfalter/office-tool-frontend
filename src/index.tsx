@@ -9,6 +9,7 @@ import { ThemeContextProvider } from './context/theme-context';
 import Header from './components/layout/Header';
 import PdfInterface from './components/pdfTool/PdfInterface';
 import PdfSplit from './components/pdfTool/pdfSplit/PdfSplit';
+import PdfMerge from './components/pdfTool/pdfMerge/PdfMerge';
 
 ReactDOM.render(
   <React.StrictMode>
@@ -20,6 +21,7 @@ ReactDOM.render(
             <Route path="/" element={<App />} />
             <Route path="/pdf-tool" element={<PdfInterface />} />
             <Route path="/pdf-tool/split" element={<PdfSplit />} />
+            <Route path="/pdf-tool/merge" element={<PdfMerge />} />
           </Routes>
         </Box>
       </ThemeContextProvider>
