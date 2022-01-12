@@ -1,47 +1,35 @@
 import React, { useState } from 'react';
-import { Button, TextField, SelectChangeEvent, Snackbar, Alert, SnackbarCloseReason } from '@mui/material';
+import { Button, Snackbar, TextField, Alert, SnackbarCloseReason } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { UploadFile, Send } from '@mui/icons-material';
+import FadeIn from 'react-fade-in';
 import axios, { AxiosRequestConfig } from 'axios';
-import { CustomisedInput, CustomisedFormControl, CustomisedCard, Title } from './PdfSplit.styled';
-import Select from '../../../common/Select';
+import { CustomisedInput, CustomisedFormControl, CustomisedCard, Title } from './PdfMerge.styled';
+import DragAndDropList from '../../../common/DragAndDropList';
 
-const pageOptions = [
-  {
-    text: 'No Page Split',
-    value: 'no-split',
-  },
-  {
-    text: 'Page Split (Horizontal)',
-    value: 'horizontal',
-  },
-  {
-    text: 'Page Split (Vertical)',
-    value: 'vertical',
-  },
-];
+interface CustomisedFile {
+  content: File;
+  name: string;
+}
+type CustomisedFileList = Array<CustomisedFile>;
 
-const PdfSplit = (): JSX.Element => {
-  const [pageName, setPageName] = useState('Page');
-  const [pageOption, setPageOption] = useState('no-split');
-  const [file, setFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState('Upload File');
-  const [isUploading, setIsUploading] = useState('initial');
+const PdfMerge = (): JSX.Element => {
+  const [files, setFiles] = useState<CustomisedFileList>([]);
+  const [outputPdfName, setOutputPdfName] = useState<string>('');
+  const [isUploading, setIsUploading] = useState<string>('initial');
   const [showNotification, setShowNotification] = useState(false);
-
-  const setPageNameHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPageName(e.target.value);
-  };
-
-  const pageOptionSelectHandler = (e: SelectChangeEvent<string>): void => {
-    setPageOption(e.target.value);
-  };
 
   const fileUploadHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
+    const fileList = [];
     if (files && files.length) {
-      setFileName(files[0].name);
-      setFile(files[0]);
+      for (const file of files) {
+        fileList.push({
+          name: file.name,
+          content: file,
+        });
+      }
+      setFiles(fileList);
     }
   };
 
@@ -49,14 +37,13 @@ const PdfSplit = (): JSX.Element => {
     e.preventDefault();
     setIsUploading('processing');
     const formData = new FormData();
-    formData.append('file', file as Blob, fileName);
-    formData.append('pageName', pageName);
-    formData.append('pageOptions', JSON.stringify({ split: pageOption }));
+    files.forEach((file) => formData.append('files', file.content as Blob, file.name));
+    formData.append('outputName', outputPdfName);
     const headers = {
       headers: { 'content-type': 'multipart/form-data', accept: 'application/octet-stream' },
     } as AxiosRequestConfig;
     axios
-      .post(`${process.env.REACT_APP_BACKEND_URL}/pdf/split`, formData, headers)
+      .post(`${process.env.REACT_APP_BACKEND_URL}/pdf/merge`, formData, headers)
       .then((response) => {
         const responseBuffer = Buffer.from(response.data, 'base64');
 
@@ -65,12 +52,12 @@ const PdfSplit = (): JSX.Element => {
         link.href = url;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        link.setAttribute('download', fileName.replace('.pdf', '.zip'));
+        link.setAttribute('download', `${outputPdfName}.pdf`);
         document.body.appendChild(link);
         link.click();
 
-        setFile(null);
-        setFileName('Upload File');
+        setFiles([]);
+        setOutputPdfName('');
         setShowNotification(true);
       })
       .catch((err) => {
@@ -91,36 +78,44 @@ const PdfSplit = (): JSX.Element => {
     }
   };
 
+  const setOutputPdfNameHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setOutputPdfName(e.target.value);
+  };
+
+  const draggingHandler = (sourceIndex: number, targetIndex: number) => {
+    const itemBeingDragged = files[sourceIndex];
+    files.splice(sourceIndex, 1);
+    files.splice(targetIndex, 0, itemBeingDragged);
+    setFiles([...files]);
+  };
+
+  const deleteFileHandler = (_: React.MouseEvent<HTMLButtonElement>, indexToBeDeleted: number) => {
+    files.splice(indexToBeDeleted, 1);
+    setFiles([...files]);
+  };
+
   return (
     <form onSubmit={submitHandler}>
       <CustomisedCard>
-        <Title variant="h3">PDF Split Tool</Title>
+        <Title variant="h3">PDF Merge Tool</Title>
         <CustomisedFormControl>
           <TextField
-            label="Output Page Name"
-            value={pageName}
-            onChange={setPageNameHandler}
+            label="Output PDF Name"
+            value={outputPdfName}
+            onChange={setOutputPdfNameHandler}
             disabled={isUploading === 'processing'}
           />
         </CustomisedFormControl>
-        <CustomisedFormControl>
-          <Select
-            title="Page Options"
-            selectHandler={pageOptionSelectHandler}
-            selectedValue={pageOption}
-            options={pageOptions}
-            disabled={isUploading === 'processing'}
-          />
-        </CustomisedFormControl>
-        <label htmlFor="pdf-upload">
+        <label htmlFor="images-upload">
           <CustomisedFormControl>
             <CustomisedInput
-              accept=".pdf"
+              accept="image/jpeg, image/png"
               type="file"
-              id="pdf-upload"
-              data-testid="pdf-upload"
+              id="images-upload"
+              data-testid="images-upload"
               onChange={fileUploadHandler}
               onClick={clearUploadedFileHandler}
+              multiple
             />
             <Button
               variant="outlined"
@@ -128,16 +123,29 @@ const PdfSplit = (): JSX.Element => {
               endIcon={<UploadFile />}
               disabled={isUploading === 'processing'}
             >
-              {fileName}
+              Upload Files
             </Button>
           </CustomisedFormControl>
         </label>
+
+        {!!files.length && (
+          <FadeIn>
+            <CustomisedFormControl>
+              <Alert severity="info">Reorder the pages by dragging and dropping if needed</Alert>
+              <DragAndDropList
+                items={files.map((file) => file.name)}
+                onDragging={draggingHandler}
+                onDelete={deleteFileHandler}
+              />
+            </CustomisedFormControl>
+          </FadeIn>
+        )}
         <CustomisedFormControl>
           <LoadingButton
             loading={isUploading === 'processing'}
             variant="contained"
             endIcon={<Send />}
-            disabled={!(pageName && pageOption && file)}
+            disabled={!files.length || !outputPdfName}
             type="submit"
           >
             Submit
@@ -158,4 +166,4 @@ const PdfSplit = (): JSX.Element => {
   );
 };
 
-export default PdfSplit;
+export default PdfMerge;
