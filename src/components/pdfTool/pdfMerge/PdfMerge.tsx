@@ -38,7 +38,7 @@ const PdfMerge = (): JSX.Element => {
     setIsUploading('processing');
     const formData = new FormData();
     files.forEach((file) => formData.append('files', file.content as Blob, file.name));
-    formData.append('outputName', outputPdfName);
+    formData.append('outputFileName', outputPdfName);
     const headers = {
       headers: { 'content-type': 'multipart/form-data', accept: 'application/octet-stream' },
     } as AxiosRequestConfig;
