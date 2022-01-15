@@ -1,7 +1,7 @@
 # Office Tool Frontend
 
-![CI/CD](https://github.com/dyarleniber/react-workflow-gh-actions/workflows/CI/CD/badge.svg)
-[![codecov](https://codecov.io/gh/<OWNER>/<REPOSITORY>/branch/master/graph/badge.svg)](https://app.codecov.io/gh/nachetfalter/office-tool-frontend)
+![CI/CD](https://github.com/nachetfalter/office-tool-frontend/workflows/office-tool-frontend-cicd/badge.svg)
+[![codecov](https://codecov.io/gh/nachetfalter/office-tool-frontend/branch/master/graph/badge.svg)](https://app.codecov.io/gh/nachetfalter/office-tool-frontend)
 ![GitHub last commit](https://img.shields.io/github/last-commit/nachetfalter/office-tool-frontend)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/nachetfalter/office-tool-frontend)
 
