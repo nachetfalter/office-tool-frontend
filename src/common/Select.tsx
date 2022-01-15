@@ -16,9 +16,9 @@ interface Props {
 const Select = ({ title, selectHandler, selectedValue, options, disabled }: Props): JSX.Element => {
   return (
     <>
-      <InputLabel id={`${title.toLowerCase().replaceAll(' ', '-')}-page-option-label`}>{title}</InputLabel>
+      <InputLabel id={`${title.toLowerCase().replace(/ /g, '-')}-page-option-label`}>{title}</InputLabel>
       <MuiSelect
-        labelId={`${title.toLowerCase().replaceAll(' ', '-')}-page-option-label`}
+        labelId={`${title.toLowerCase().replace(/ /g, '-')}-page-option-label`}
         value={selectedValue}
         label={title}
         onChange={selectHandler}
