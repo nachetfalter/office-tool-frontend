@@ -1,8 +1,6 @@
 name: office-tool-frontend-cicd
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -44,8 +42,7 @@ jobs:
         run: |
           git config --global user.name 'nachetfalter'
           git config --global user.email 'wuaiweijun@hotmail.com'
-          git remote set-url origin https://nachetfalter@github.com/office-tool-frontend
-          yarn deploy
+          git remote set-url origin https://${github_token}@github.com/${repository}
         env:
           CI: ''
           user_name: 'github-actions[bot]'
