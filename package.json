@@ -35,7 +35,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "jest --collect-coverage --env=jsdom",
+    "test": "jest --collect-coverage --env=jsdom --changedSince=main",
     "eject": "react-scripts eject",
     "lint": "eslint --fix --ext .ts,.tsx .",
     "postinstall": "husky install",

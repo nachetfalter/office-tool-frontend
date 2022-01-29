@@ -2,11 +2,11 @@ import { List, ListItem, Typography, Button } from '@mui/material';
 
 import { CustomisedCard } from './ButtonMenu.styled';
 
-type OptionType = {
+interface OptionType {
   name: string;
   icon: React.ReactNode;
   clickParameter: string;
-};
+}
 
 interface Props {
   title?: string;

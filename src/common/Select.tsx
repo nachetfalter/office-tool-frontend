@@ -1,9 +1,9 @@
 import { InputLabel, Select as MuiSelect, MenuItem, SelectChangeEvent } from '@mui/material';
 
-type selectOptions = {
+interface selectOptions {
   text: string;
   value: string;
-};
+}
 
 interface Props {
   title: string;

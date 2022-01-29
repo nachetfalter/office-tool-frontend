@@ -23,8 +23,8 @@ describe('PdfMerge', () => {
       const fileOne = new File([blob], 'test-1.png', {
         type: 'image/png',
       });
-      const fileTwo = new File([blob], 'test-2.png', {
-        type: 'image/png',
+      const fileTwo = new File([blob], 'test-2.jpeg', {
+        type: 'image/jpeg',
       });
       File.prototype.text = jest.fn().mockResolvedValueOnce(fileContent);
       const fileUpload = screen.getByTestId('images-upload');
@@ -41,12 +41,12 @@ describe('PdfMerge', () => {
   it('has a title, a upload button and a submit button in the initial state', () => {
     expect(screen.queryByText('PDF Merge Tool')).toBeTruthy();
     expect(screen.queryByLabelText('Output PDF Name')).toBeTruthy();
-    expect(screen.queryByText('Upload Files')).toBeTruthy();
+    expect(screen.queryByText('Upload PNG/JPEGs')).toBeTruthy();
     expect(screen.queryByText('Submit')).toBeTruthy();
     expect(screen.queryByText('Submit')?.closest('button')).toBeDisabled();
   });
 
-  it('allows user to upload files and set the output file name', async () => {
+  it('allows user to upload png/jpegs and set the output file name', async () => {
     const outputFileNameInput = screen.getByLabelText('Output PDF Name');
     if (outputFileNameInput) {
       fireEvent.change(outputFileNameInput, { target: { value: 'test' } });
@@ -56,8 +56,37 @@ describe('PdfMerge', () => {
     }
 
     await waitFor(() => expect(screen.queryByText('test-1.png')).toBeTruthy());
-    await waitFor(() => expect(screen.queryByText('test-2.png')).toBeTruthy());
+    await waitFor(() => expect(screen.queryByText('test-2.jpeg')).toBeTruthy());
     expect(screen.queryByText('Submit')?.closest('button')).not.toBeDisabled();
+  });
+
+  it('automatically sanitises page name upon input', async () => {
+    const outputFileNameInput = screen.getByLabelText('Output PDF Name');
+    if (outputFileNameInput) {
+      fireEvent.change(outputFileNameInput, { target: { value: 'test+[]' } });
+      expect((outputFileNameInput as HTMLInputElement).value).toBe('test ');
+      fireEvent.change(outputFileNameInput, { target: { value: '0123456789012345678901234567891' } });
+      await waitFor(() =>
+        expect(screen.queryByText('The output file name cannot be more than 30 characters')).toBeTruthy(),
+      );
+      expect((outputFileNameInput as HTMLInputElement).value).toBe('test ');
+    } else {
+      fail('Cannot find output PDF name input');
+    }
+  });
+
+  it('disallows uploading invalid file', async () => {
+    const fileContent = '{ "name": "test file" }';
+    const blob = new Blob([fileContent]);
+    const invalidFile = new File([blob], 'test-3.pdf', {
+      type: 'application/pdf',
+    });
+    File.prototype.text = jest.fn().mockResolvedValueOnce(fileContent);
+    const fileUpload = screen.getByTestId('images-upload');
+    userEvent.upload(fileUpload, [invalidFile]);
+    await waitFor(() =>
+      expect(screen.queryByText('One of the input image is either too big (>1Mb) or has an invalid type')).toBeTruthy(),
+    );
   });
 
   it('allows user to change the order of files', async () => {
@@ -67,7 +96,7 @@ describe('PdfMerge', () => {
       positions: 1,
     });
 
-    verifyFileOrderInColumn('drag-and-drop-list', ['test-2.png', 'test-1.png']);
+    verifyFileOrderInColumn('drag-and-drop-list', ['test-2.jpeg', 'test-1.png']);
   });
 
   it('allows user to delete uploaded files', async () => {

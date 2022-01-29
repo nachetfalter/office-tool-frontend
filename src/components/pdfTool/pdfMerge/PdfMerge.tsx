@@ -1,35 +1,63 @@
 import React, { useState } from 'react';
-import { Button, Snackbar, TextField, Alert, SnackbarCloseReason } from '@mui/material';
+import { Button, Snackbar, TextField, Alert, AlertColor, SnackbarCloseReason } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { UploadFile, Send } from '@mui/icons-material';
 import FadeIn from 'react-fade-in';
 import axios, { AxiosRequestConfig } from 'axios';
 import { CustomisedInput, CustomisedFormControl, CustomisedCard, Title } from './PdfMerge.styled';
 import DragAndDropList from '../../../common/DragAndDropList';
+import { cleanString } from '../../../utility/string';
+import { fileIsValid } from '../../../utility/file';
 
 interface CustomisedFile {
   content: File;
   name: string;
 }
+interface NotificationDetail {
+  message: string;
+  severity: AlertColor | undefined;
+}
+
 type CustomisedFileList = Array<CustomisedFile>;
 
 const PdfMerge = (): JSX.Element => {
   const [files, setFiles] = useState<CustomisedFileList>([]);
-  const [outputPdfName, setOutputPdfName] = useState<string>('');
+  const [outputFilename, setOutputFilename] = useState<string>('');
   const [isUploading, setIsUploading] = useState<string>('initial');
   const [showNotification, setShowNotification] = useState(false);
+  const [notificationDetail, setNotificationDetail] = useState<NotificationDetail>({
+    message: 'Process Finished',
+    severity: 'success',
+  });
 
   const fileUploadHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
     const fileList = [];
     if (files && files.length) {
-      for (const file of files) {
-        fileList.push({
-          name: file.name,
-          content: file,
+      if (files.length > 200) {
+        setNotificationDetail({
+          message: 'You can only upload up to 200 files',
+          severity: 'error',
         });
+        setShowNotification(true);
+      } else {
+        for (const file of files) {
+          if (!fileIsValid(file, 1, ['image/png', 'image/jpeg'])) {
+            setNotificationDetail({
+              message: 'One of the input image is either too big (>1Mb) or has an invalid type',
+              severity: 'error',
+            });
+            setShowNotification(true);
+            return;
+          } else {
+            fileList.push({
+              name: file.name,
+              content: file,
+            });
+          }
+        }
+        setFiles(fileList);
       }
-      setFiles(fileList);
     }
   };
 
@@ -38,7 +66,7 @@ const PdfMerge = (): JSX.Element => {
     setIsUploading('processing');
     const formData = new FormData();
     files.forEach((file) => formData.append('files', file.content as Blob, file.name));
-    formData.append('outputFileName', outputPdfName);
+    formData.append('outputFileName', outputFilename);
     const headers = {
       headers: { 'content-type': 'multipart/form-data', accept: 'application/octet-stream' },
     } as AxiosRequestConfig;
@@ -52,12 +80,16 @@ const PdfMerge = (): JSX.Element => {
         link.href = url;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        link.setAttribute('download', `${outputPdfName}.pdf`);
+        link.setAttribute('download', `${outputFilename}.pdf`);
         document.body.appendChild(link);
         link.click();
 
         setFiles([]);
-        setOutputPdfName('');
+        setOutputFilename('');
+        setNotificationDetail({
+          message: 'Process Finished',
+          severity: 'success',
+        });
         setShowNotification(true);
       })
       .catch((err) => {
@@ -78,8 +110,17 @@ const PdfMerge = (): JSX.Element => {
     }
   };
 
-  const setOutputPdfNameHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setOutputPdfName(e.target.value);
+  const setOutputFilenameHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const outputFilename = cleanString(e.target.value);
+    if (outputFilename.length > 30) {
+      setNotificationDetail({
+        message: 'The output file name cannot be more than 30 characters',
+        severity: 'error',
+      });
+      setShowNotification(true);
+    } else {
+      setOutputFilename(outputFilename);
+    }
   };
 
   const draggingHandler = (sourceIndex: number, targetIndex: number) => {
@@ -101,8 +142,8 @@ const PdfMerge = (): JSX.Element => {
         <CustomisedFormControl>
           <TextField
             label="Output PDF Name"
-            value={outputPdfName}
-            onChange={setOutputPdfNameHandler}
+            value={outputFilename}
+            onChange={setOutputFilenameHandler}
             disabled={isUploading === 'processing'}
           />
         </CustomisedFormControl>
@@ -123,7 +164,7 @@ const PdfMerge = (): JSX.Element => {
               endIcon={<UploadFile />}
               disabled={isUploading === 'processing'}
             >
-              Upload Files
+              Upload PNG/JPEGs
             </Button>
           </CustomisedFormControl>
         </label>
@@ -145,7 +186,7 @@ const PdfMerge = (): JSX.Element => {
             loading={isUploading === 'processing'}
             variant="contained"
             endIcon={<Send />}
-            disabled={!files.length || !outputPdfName}
+            disabled={!files.length || !outputFilename}
             type="submit"
           >
             Submit
@@ -155,11 +196,11 @@ const PdfMerge = (): JSX.Element => {
       <Snackbar
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         open={showNotification}
-        autoHideDuration={2000}
+        autoHideDuration={4000}
         onClose={closeNotificationHandler}
       >
-        <Alert severity="success" sx={{ width: '100%' }}>
-          Process Finished
+        <Alert severity={notificationDetail.severity} sx={{ width: '100%' }}>
+          {notificationDetail.message}
         </Alert>
       </Snackbar>
     </form>
