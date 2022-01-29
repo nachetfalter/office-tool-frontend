@@ -39,6 +39,8 @@ module.exports = {
   rules: {
     'react/jsx-filename-extension': [2, { extensions: ['.js', '.jsx', '.ts', '.tsx'] }],
     'react/react-in-jsx-scope': 'off',
+    'no-misleading-character-class': 'off',
+    'security/detect-object-injection': 'off',
     'arrow-body-style': 0,
     'import/extensions': [
       'warn',

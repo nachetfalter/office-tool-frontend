@@ -21,7 +21,7 @@ describe('PdfSplit', () => {
     expect(screen.getByText('PDF Split Tool')).toBeInTheDocument();
     expect(screen.queryAllByText('Output Page Name')).toBeTruthy();
     expect(screen.queryAllByText('Page Options')).toBeTruthy();
-    expect(screen.getByText('Upload File')).toBeInTheDocument();
+    expect(screen.getByText('Upload A PDF File')).toBeInTheDocument();
     expect(screen.getByText('Submit')).toBeInTheDocument();
   });
 
@@ -49,6 +49,33 @@ describe('PdfSplit', () => {
     const fileUpload = screen.getByTestId('pdf-upload');
     userEvent.upload(fileUpload, file);
     await waitFor(() => expect(screen.queryByText('test.pdf')).toBeTruthy());
+  });
+
+  it('automatically sanitises page name upon input', async () => {
+    const pageNameInput = screen.getByLabelText('Output Page Name');
+    if (pageNameInput) {
+      fireEvent.change(pageNameInput, { target: { value: 'testPage+[]' } });
+      expect((pageNameInput as HTMLInputElement).value).toBe('testPage ');
+      fireEvent.change(pageNameInput, { target: { value: '0123456789012345678901234567891' } });
+      await waitFor(() => expect(screen.queryByText('The page name cannot be more than 30 characters')).toBeTruthy());
+      expect((pageNameInput as HTMLInputElement).value).toBe('testPage ');
+    } else {
+      fail('Cannot find page name input');
+    }
+  });
+
+  it('disallows uploading invalid file', async () => {
+    const fileContent = '{ "name": "test file" }';
+    const blob = new Blob([fileContent]);
+    const file = new File([blob], 'test.png', {
+      type: 'image/png',
+    });
+    File.prototype.text = jest.fn().mockResolvedValueOnce(fileContent);
+    const fileUpload = screen.getByTestId('pdf-upload');
+    userEvent.upload(fileUpload, file);
+    await waitFor(() =>
+      expect(screen.queryByText('The input file is either too big (>150Mb) or has an invalid type')).toBeTruthy(),
+    );
   });
 
   it('disallows the user to submit the form unless all fields are filled', async () => {

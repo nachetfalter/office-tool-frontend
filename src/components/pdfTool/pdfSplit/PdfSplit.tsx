@@ -1,10 +1,19 @@
 import React, { useState } from 'react';
-import { Button, TextField, SelectChangeEvent, Snackbar, Alert, SnackbarCloseReason } from '@mui/material';
+import { Button, TextField, SelectChangeEvent, Snackbar, Alert, AlertColor, SnackbarCloseReason } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { UploadFile, Send } from '@mui/icons-material';
 import axios, { AxiosRequestConfig } from 'axios';
 import { CustomisedInput, CustomisedFormControl, CustomisedCard, Title } from './PdfSplit.styled';
 import Select from '../../../common/Select';
+import { cleanString } from '../../../utility/string';
+import { fileIsValid } from '../../../utility/file';
+
+type PageSplitOption = 'no-split' | 'horizontal' | 'vertical';
+
+interface NotificationDetail {
+  message: string;
+  severity: AlertColor | undefined;
+}
 
 const pageOptions = [
   {
@@ -23,25 +32,46 @@ const pageOptions = [
 
 const PdfSplit = (): JSX.Element => {
   const [pageName, setPageName] = useState('Page');
-  const [pageOption, setPageOption] = useState('no-split');
+  const [pageOption, setPageOption] = useState<PageSplitOption>('no-split');
   const [file, setFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState('Upload File');
+  const [fileName, setFileName] = useState('Upload A PDF File');
   const [isUploading, setIsUploading] = useState('initial');
   const [showNotification, setShowNotification] = useState(false);
+  const [notificationDetail, setNotificationDetail] = useState<NotificationDetail>({
+    message: 'Process Finished',
+    severity: 'success',
+  });
 
   const setPageNameHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPageName(e.target.value);
+    const pageNameInput = cleanString(e.target.value);
+    if (pageNameInput.length > 30) {
+      setNotificationDetail({
+        message: 'The page name cannot be more than 30 characters',
+        severity: 'error',
+      });
+      setShowNotification(true);
+    } else {
+      setPageName(pageNameInput);
+    }
   };
 
   const pageOptionSelectHandler = (e: SelectChangeEvent<string>): void => {
-    setPageOption(e.target.value);
+    setPageOption(e.target.value as PageSplitOption);
   };
 
   const fileUploadHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
     if (files && files.length) {
-      setFileName(files[0].name);
-      setFile(files[0]);
+      if (fileIsValid(files[0], 150, ['application/pdf'])) {
+        setFileName(files[0].name);
+        setFile(files[0]);
+      } else {
+        setNotificationDetail({
+          message: 'The input file is either too big (>150Mb) or has an invalid type',
+          severity: 'error',
+        });
+        setShowNotification(true);
+      }
     }
   };
 
@@ -50,7 +80,7 @@ const PdfSplit = (): JSX.Element => {
     setIsUploading('processing');
     const formData = new FormData();
     formData.append('file', file as Blob, fileName);
-    formData.append('pageName', pageName);
+    formData.append('pageName', pageName.trim());
     formData.append('pageOptions', JSON.stringify({ split: pageOption }));
     const headers = {
       headers: { 'content-type': 'multipart/form-data', accept: 'application/octet-stream' },
@@ -70,7 +100,11 @@ const PdfSplit = (): JSX.Element => {
         link.click();
 
         setFile(null);
-        setFileName('Upload File');
+        setFileName('Upload A PDF File');
+        setNotificationDetail({
+          message: 'Process Finished',
+          severity: 'success',
+        });
         setShowNotification(true);
       })
       .catch((err) => {
@@ -98,6 +132,7 @@ const PdfSplit = (): JSX.Element => {
         <CustomisedFormControl>
           <TextField
             label="Output Page Name"
+            helperText="Enter up to 30 characters"
             value={pageName}
             onChange={setPageNameHandler}
             disabled={isUploading === 'processing'}
@@ -147,11 +182,11 @@ const PdfSplit = (): JSX.Element => {
       <Snackbar
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         open={showNotification}
-        autoHideDuration={2000}
+        autoHideDuration={4000}
         onClose={closeNotificationHandler}
       >
-        <Alert severity="success" sx={{ width: '100%' }}>
-          Process Finished
+        <Alert severity={notificationDetail.severity} sx={{ width: '100%' }}>
+          {notificationDetail.message}
         </Alert>
       </Snackbar>
     </form>
