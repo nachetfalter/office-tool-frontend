@@ -102,11 +102,9 @@ describe('PdfSplit', () => {
   });
 
   it('resets file after submission', async () => {
-    mockedAxios.post.mockReturnValue(
-      Promise.resolve({
-        data: new ArrayBuffer(8),
-      }),
-    );
+    mockedAxios.post.mockResolvedValue({
+      data: new ArrayBuffer(8),
+    });
 
     global.URL.createObjectURL = jest.fn();
 
@@ -131,5 +129,38 @@ describe('PdfSplit', () => {
 
     await waitFor(() => expect(screen.queryByText('test.pdf')).toBeFalsy());
     await waitFor(() => expect(screen.queryByText('Submit')).toBeDisabled());
+  });
+
+  it('displays an error message if the call to the backend fails', async () => {
+    mockedAxios.post.mockRejectedValue({
+      response: {
+        data: {
+          errors: ['testError'],
+        },
+      },
+    });
+
+    global.URL.createObjectURL = jest.fn();
+
+    const pageNameInput = screen.getByLabelText('Output Page Name');
+    if (pageNameInput) {
+      fireEvent.change(pageNameInput, { target: { value: 'testPage' } });
+    } else {
+      fail('Cannot find page name input');
+    }
+
+    const fileContent = '{ "name": "test file" }';
+    const blob = new Blob([fileContent]);
+    const file = new File([blob], 'test.pdf', {
+      type: 'application/PDF',
+    });
+    File.prototype.text = jest.fn().mockResolvedValueOnce(fileContent);
+    const fileUpload = screen.getByTestId('pdf-upload');
+    userEvent.upload(fileUpload, file);
+    await waitFor(() => expect(screen.queryByText('test.pdf')).toBeTruthy());
+
+    userEvent.click(screen.getByText('Submit'));
+
+    await waitFor(() => expect(screen.queryByText('testError')).toBeTruthy());
   });
 });

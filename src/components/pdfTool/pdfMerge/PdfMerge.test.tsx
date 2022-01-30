@@ -106,11 +106,9 @@ describe('PdfMerge', () => {
   });
 
   it('resets file after submission', async () => {
-    mockedAxios.post.mockReturnValue(
-      Promise.resolve({
-        data: new ArrayBuffer(8),
-      }),
-    );
+    mockedAxios.post.mockResolvedValue({
+      data: new ArrayBuffer(8),
+    });
 
     global.URL.createObjectURL = jest.fn();
 
@@ -126,5 +124,28 @@ describe('PdfMerge', () => {
     await waitFor(() => expect(screen.queryByText('test-1.png')).toBeFalsy());
     await waitFor(() => expect(screen.queryByText('test-file')).toBeFalsy());
     await waitFor(() => expect(screen.queryByText('Submit')).toBeDisabled());
+  });
+
+  it('displays an error message if the call to the backend fails', async () => {
+    mockedAxios.post.mockRejectedValue({
+      response: {
+        data: {
+          errors: ['testError'],
+        },
+      },
+    });
+
+    global.URL.createObjectURL = jest.fn();
+
+    const outputPdfNameInput = screen.getByLabelText('Output PDF Name');
+    if (outputPdfNameInput) {
+      fireEvent.change(outputPdfNameInput, { target: { value: 'test-file' } });
+    } else {
+      fail('Cannot find output PDF name input');
+    }
+
+    userEvent.click(screen.getByText('Submit'));
+
+    await waitFor(() => expect(screen.queryByText('testError')).toBeTruthy());
   });
 });

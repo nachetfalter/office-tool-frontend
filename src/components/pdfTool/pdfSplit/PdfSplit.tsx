@@ -108,7 +108,11 @@ const PdfSplit = (): JSX.Element => {
         setShowNotification(true);
       })
       .catch((err) => {
-        console.log(err);
+        setNotificationDetail({
+          message: err?.response?.data?.errors[0] ?? 'Sorry, an error has happened, please raise an issue on GitHub.',
+          severity: 'error',
+        });
+        setShowNotification(true);
       })
       .finally(() => {
         setIsUploading('initial');
