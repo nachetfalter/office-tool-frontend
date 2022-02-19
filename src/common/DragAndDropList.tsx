@@ -1,5 +1,5 @@
 import { List, ListItem, IconButton } from '@mui/material';
-import { DragDropContext, Droppable, Draggable, DropResult, ResponderProvided } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import CloseIcon from '@mui/icons-material/Close';
 import styled from 'styled-components';
 
@@ -24,7 +24,7 @@ const CustomisedCloseIcon = styled(CloseIcon)`
 `;
 
 const DragAndDropList = ({ items, onDragging, onDelete }: Props): JSX.Element => {
-  const draggingHandler = (result: DropResult, _: ResponderProvided) => {
+  const draggingHandler = (result: DropResult) => {
     const sourceIndex = result.source?.index;
     const targetIndex = result.destination?.index;
     if (sourceIndex !== undefined && targetIndex !== undefined && sourceIndex !== targetIndex) {

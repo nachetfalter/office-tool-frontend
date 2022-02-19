@@ -2,20 +2,27 @@ import React, { useState } from 'react';
 import { Button, TextField, SelectChangeEvent, Snackbar, Alert, AlertColor, SnackbarCloseReason } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { UploadFile, Send } from '@mui/icons-material';
-import axios, { AxiosRequestConfig } from 'axios';
+import axios from 'axios';
+import { v4 as uuid } from 'uuid';
 import { CustomisedInput, CustomisedFormControl, CustomisedCard, Title } from './PdfSplit.styled';
 import Select from '../../../common/Select';
+import { downloadFile } from '../../../utility/dom';
 import { cleanString } from '../../../utility/string';
 import { fileIsValid } from '../../../utility/file';
+import { uploadFile } from '../../../utility/upload';
 
 type PageSplitOption = 'no-split' | 'horizontal' | 'vertical';
+
+interface PageOptions {
+  split: string;
+}
 
 interface NotificationDetail {
   message: string;
   severity: AlertColor | undefined;
 }
 
-const pageOptions = [
+const splitOptions = [
   {
     text: 'No Page Split',
     value: 'no-split',
@@ -30,9 +37,13 @@ const pageOptions = [
   },
 ];
 
+const defaultPageOptions = {
+  split: 'no-split',
+};
+
 const PdfSplit = (): JSX.Element => {
   const [pageName, setPageName] = useState('Page');
-  const [pageOption, setPageOption] = useState<PageSplitOption>('no-split');
+  const [pageOptions, setPageOptions] = useState<PageOptions>(defaultPageOptions);
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState('Upload A PDF File');
   const [isUploading, setIsUploading] = useState('initial');
@@ -55,8 +66,10 @@ const PdfSplit = (): JSX.Element => {
     }
   };
 
-  const pageOptionSelectHandler = (e: SelectChangeEvent<string>): void => {
-    setPageOption(e.target.value as PageSplitOption);
+  const splitOptionSelectHandler = (e: SelectChangeEvent<string>): void => {
+    const newPageOptions = { ...pageOptions };
+    newPageOptions.split = e.target.value as PageSplitOption;
+    setPageOptions(newPageOptions);
   };
 
   const fileUploadHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,51 +91,53 @@ const PdfSplit = (): JSX.Element => {
   const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsUploading('processing');
-    const formData = new FormData();
-    formData.append('file', file as Blob, fileName);
-    formData.append('pageName', pageName.trim());
-    formData.append('pageOptions', JSON.stringify({ split: pageOption }));
-    const headers = {
-      headers: { 'content-type': 'multipart/form-data', accept: 'application/octet-stream' },
-    } as AxiosRequestConfig;
-    axios
-      .post(`${process.env.REACT_APP_BACKEND_URL}/pdf/split`, formData, headers)
-      .then((response) => {
-        const responseBuffer = Buffer.from(response.data, 'base64');
 
-        const url = window.URL.createObjectURL(new Blob([responseBuffer]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.setAttribute('download', fileName.replace('.pdf', '.zip'));
-        document.body.appendChild(link);
-        link.click();
-
-        setFile(null);
-        setFileName('Upload A PDF File');
-        setNotificationDetail({
-          message: 'Process Finished',
-          severity: 'success',
-        });
-        setShowNotification(true);
-      })
-      .catch((err) => {
-        setNotificationDetail({
-          message: err?.response?.data?.errors[0] ?? 'Sorry, an error has happened, please raise an issue on GitHub.',
-          severity: 'error',
-        });
-        setShowNotification(true);
-      })
-      .finally(() => {
-        setIsUploading('initial');
+    const fileId = uuid();
+    const fileUploadedSuccessfully = await uploadFile(`${fileId}.pdf`, file as File);
+    if (!fileUploadedSuccessfully) {
+      setNotificationDetail({
+        message: 'Sorry, an error has happened, please raise an issue on GitHub.',
+        severity: 'error',
       });
+      setShowNotification(true);
+    } else {
+      axios
+        .post(`${process.env.REACT_APP_BACKEND_URL}/pdf/split`, {
+          fileName: `${fileId}.pdf`,
+          pageName,
+          pageOptions,
+        })
+        .then((response) => {
+          const responseBuffer = Buffer.from(response.data, 'base64');
+
+          downloadFile(responseBuffer, fileName.replace('.pdf', '.zip'));
+
+          setFile(null);
+          setFileName('Upload A PDF File');
+          setNotificationDetail({
+            message: 'Process Finished',
+            severity: 'success',
+          });
+          setShowNotification(true);
+        })
+        .catch((err) => {
+          setNotificationDetail({
+            message: err?.response?.data.errors[0] ?? 'Sorry, an error has happened, please raise an issue on GitHub.',
+            severity: 'error',
+          });
+          setShowNotification(true);
+        })
+        .finally(() => {
+          setIsUploading('initial');
+        });
+    }
   };
 
   const clearUploadedFileHandler = (e: React.MouseEvent<HTMLInputElement>) => {
     (e.target as HTMLInputElement).value = '';
   };
 
+  // eslint-disable-next-line
   const closeNotificationHandler = (_: Event | React.SyntheticEvent<any, Event>, reason: SnackbarCloseReason) => {
     if (reason === 'timeout') {
       setShowNotification(false);
@@ -145,9 +160,9 @@ const PdfSplit = (): JSX.Element => {
         <CustomisedFormControl>
           <Select
             title="Page Options"
-            selectHandler={pageOptionSelectHandler}
-            selectedValue={pageOption}
-            options={pageOptions}
+            selectHandler={splitOptionSelectHandler}
+            selectedValue={pageOptions.split}
+            options={splitOptions}
             disabled={isUploading === 'processing'}
           />
         </CustomisedFormControl>
@@ -176,7 +191,7 @@ const PdfSplit = (): JSX.Element => {
             loading={isUploading === 'processing'}
             variant="contained"
             endIcon={<Send />}
-            disabled={!(pageName && pageOption && file)}
+            disabled={!(pageName && pageOptions && file)}
             type="submit"
           >
             Submit
