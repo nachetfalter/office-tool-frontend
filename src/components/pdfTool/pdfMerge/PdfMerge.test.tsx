@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event';
 import axios from 'axios';
 import { makeDnd, mockGetComputedStyle, mockDndSpacing, DND_DIRECTION_DOWN } from 'react-beautiful-dnd-test-utils';
 import PdfMerge from './PdfMerge';
+import * as uploadModule from '../../../utility/upload';
 
+jest.mock('../../../utility/dom');
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -75,7 +77,7 @@ describe('PdfMerge', () => {
     }
   });
 
-  it('disallows uploading invalid file', async () => {
+  it('prevents user from uploading invalid files', async () => {
     const fileContent = '{ "name": "test file" }';
     const blob = new Blob([fileContent]);
     const invalidFile = new File([blob], 'test-3.pdf', {
@@ -109,6 +111,7 @@ describe('PdfMerge', () => {
     mockedAxios.post.mockResolvedValue({
       data: new ArrayBuffer(8),
     });
+    jest.spyOn(uploadModule, 'uploadFile').mockResolvedValue(true);
 
     global.URL.createObjectURL = jest.fn();
 
@@ -121,9 +124,28 @@ describe('PdfMerge', () => {
 
     userEvent.click(screen.getByText('Submit'));
 
+    await waitFor(() => expect(screen.queryByText('Process Finished')).toBeTruthy());
     await waitFor(() => expect(screen.queryByText('test-1.png')).toBeFalsy());
     await waitFor(() => expect(screen.queryByText('test-file')).toBeFalsy());
     await waitFor(() => expect(screen.queryByText('Submit')).toBeDisabled());
+  });
+
+  it('displays an error message if the file upload to s3 failed', async () => {
+    global.URL.createObjectURL = jest.fn();
+    jest.spyOn(uploadModule, 'uploadFile').mockResolvedValue(false);
+
+    const outputPdfNameInput = screen.getByLabelText('Output PDF Name');
+    if (outputPdfNameInput) {
+      fireEvent.change(outputPdfNameInput, { target: { value: 'test-file' } });
+    } else {
+      fail('Cannot find output PDF name input');
+    }
+
+    userEvent.click(screen.getByText('Submit'));
+
+    await waitFor(() =>
+      expect(screen.queryByText('Sorry, an error has happened, please raise an issue on GitHub.')).toBeTruthy(),
+    );
   });
 
   it('displays an error message if the call to the backend fails', async () => {
@@ -134,6 +156,7 @@ describe('PdfMerge', () => {
         },
       },
     });
+    jest.spyOn(uploadModule, 'uploadFile').mockResolvedValue(true);
 
     global.URL.createObjectURL = jest.fn();
 
