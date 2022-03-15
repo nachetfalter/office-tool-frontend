@@ -9,7 +9,7 @@ interface Props {
   onDelete?: (event: React.MouseEvent<HTMLButtonElement>, index: number) => void;
 }
 
-const CustomisedListItem = styled(ListItem)`
+const StyledListItem = styled(ListItem)`
   border: 1px solid #d9d9d9;
   padding: 1em;
   border-radius: 5px;
@@ -17,9 +17,10 @@ const CustomisedListItem = styled(ListItem)`
   justify-content: space-between;
   align-content: center;
   flex-direction: row;
+  line-break: anywhere;
 `;
 
-const CustomisedCloseIcon = styled(CloseIcon)`
+const StyledCloseIcon = styled(CloseIcon)`
   cursor: pointer;
 `;
 
@@ -40,7 +41,7 @@ const DragAndDropList = ({ items, onDragging, onDelete }: Props): JSX.Element =>
             {items.map((item, index) => (
               <Draggable draggableId={`files-${index}`} key={index} index={index}>
                 {(draggableProvided) => (
-                  <CustomisedListItem
+                  <StyledListItem
                     ref={draggableProvided.innerRef}
                     {...draggableProvided.draggableProps}
                     {...draggableProvided.dragHandleProps}
@@ -52,10 +53,10 @@ const DragAndDropList = ({ items, onDragging, onDelete }: Props): JSX.Element =>
                         data-testid="delete-item"
                         onClick={(e) => onDelete(e, index)}
                       >
-                        <CustomisedCloseIcon />
+                        <StyledCloseIcon />
                       </IconButton>
                     )}
-                  </CustomisedListItem>
+                  </StyledListItem>
                 )}
               </Draggable>
             ))}

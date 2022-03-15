@@ -1,6 +1,6 @@
 import { List, ListItem, Typography, Button } from '@mui/material';
 
-import { CustomisedCard } from './ButtonMenu.styled';
+import { StyledCard } from './ButtonMenu.styled';
 
 interface OptionType {
   name: string;
@@ -16,7 +16,7 @@ interface Props {
 
 const ButtonMenu = ({ title, options, clickHandler }: Props): JSX.Element => {
   return (
-    <CustomisedCard>
+    <StyledCard>
       {title && (
         <Typography variant="h3" component="h1">
           {title}
@@ -36,7 +36,7 @@ const ButtonMenu = ({ title, options, clickHandler }: Props): JSX.Element => {
           </ListItem>
         ))}
       </List>
-    </CustomisedCard>
+    </StyledCard>
   );
 };
 

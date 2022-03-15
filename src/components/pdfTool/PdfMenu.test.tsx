@@ -1,7 +1,7 @@
 import { render, act, screen, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter as Router } from 'react-router-dom';
-import PdfInterface from './PdfInterface';
+import PdfInterface from './PdfMenu';
 
 describe('PdfInterface', () => {
   beforeEach(() => {

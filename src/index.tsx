@@ -7,7 +7,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { ThemeContextProvider } from './context/theme-context';
 import Header from './components/layout/Header';
-import PdfInterface from './components/pdfTool/PdfInterface';
+import PdfInterface from './components/pdfTool/PdfMenu';
 import PdfSplit from './components/pdfTool/pdfSplit/PdfSplit';
 import PdfMerge from './components/pdfTool/pdfMerge/PdfMerge';
 

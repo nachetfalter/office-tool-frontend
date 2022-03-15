@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Button, TextField, SelectChangeEvent, Snackbar, Alert, AlertColor, SnackbarCloseReason } from '@mui/material';
+import { Button, TextField, SelectChangeEvent } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { UploadFile, Send } from '@mui/icons-material';
 import axios from 'axios';
 import { v4 as uuid } from 'uuid';
-import { CustomisedInput, CustomisedFormControl, CustomisedCard, Title } from './PdfSplit.styled';
+import { StyledInput, StyledFormControl } from './PdfSplit.styled';
 import Select from '../../../common/Select';
+import Interface, { NotificationDetail } from '../../../common/Interface';
 import { downloadFile } from '../../../utility/dom';
 import { cleanString } from '../../../utility/string';
 import { fileIsValid } from '../../../utility/file';
@@ -15,11 +16,6 @@ type PageSplitOption = 'no-split' | 'horizontal' | 'vertical';
 
 interface PageOptions {
   split: string;
-}
-
-interface NotificationDetail {
-  message: string;
-  severity: AlertColor | undefined;
 }
 
 const splitOptions = [
@@ -47,11 +43,7 @@ const PdfSplit = (): JSX.Element => {
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState('Upload A PDF File');
   const [isUploading, setIsUploading] = useState('initial');
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationDetail, setNotificationDetail] = useState<NotificationDetail>({
-    message: 'Process Finished',
-    severity: 'success',
-  });
+  const [notificationDetail, setNotificationDetail] = useState<NotificationDetail | null>(null);
 
   const setPageNameHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const pageNameInput = cleanString(e.target.value);
@@ -60,7 +52,6 @@ const PdfSplit = (): JSX.Element => {
         message: 'The page name cannot be more than 30 characters',
         severity: 'error',
       });
-      setShowNotification(true);
     } else {
       setPageName(pageNameInput);
     }
@@ -83,7 +74,6 @@ const PdfSplit = (): JSX.Element => {
           message: 'The input file is either too big (>150Mb) or has an invalid type',
           severity: 'error',
         });
-        setShowNotification(true);
       }
     }
   };
@@ -99,7 +89,6 @@ const PdfSplit = (): JSX.Element => {
         message: 'Sorry, an error has happened, please raise an issue on GitHub.',
         severity: 'error',
       });
-      setShowNotification(true);
     } else {
       axios
         .post(`${process.env.REACT_APP_BACKEND_URL}/pdf/split`, {
@@ -118,14 +107,12 @@ const PdfSplit = (): JSX.Element => {
             message: 'Process Finished',
             severity: 'success',
           });
-          setShowNotification(true);
         })
         .catch((err) => {
           setNotificationDetail({
             message: err?.response?.data.errors[0] ?? 'Sorry, an error has happened, please raise an issue on GitHub.',
             severity: 'error',
           });
-          setShowNotification(true);
         })
         .finally(() => {
           setIsUploading('initial');
@@ -137,78 +124,58 @@ const PdfSplit = (): JSX.Element => {
     (e.target as HTMLInputElement).value = '';
   };
 
-  // eslint-disable-next-line
-  const closeNotificationHandler = (_: Event | React.SyntheticEvent<any, Event>, reason: SnackbarCloseReason) => {
-    if (reason === 'timeout') {
-      setShowNotification(false);
-    }
-  };
-
   return (
-    <form onSubmit={submitHandler}>
-      <CustomisedCard>
-        <Title variant="h3">PDF Split Tool</Title>
-        <CustomisedFormControl>
-          <TextField
-            label="Output Page Name"
-            helperText="Enter up to 30 characters"
-            value={pageName}
-            onChange={setPageNameHandler}
-            disabled={isUploading === 'processing'}
+    <Interface
+      submitHandler={submitHandler}
+      title="PDF Split Tool"
+      notificationMessage={notificationDetail}
+      setNotificationMessage={setNotificationDetail}
+    >
+      <StyledFormControl>
+        <TextField
+          label="Output Page Name"
+          helperText="Enter up to 30 characters"
+          value={pageName}
+          onChange={setPageNameHandler}
+          disabled={isUploading === 'processing'}
+        />
+      </StyledFormControl>
+      <StyledFormControl>
+        <Select
+          title="Page Options"
+          selectHandler={splitOptionSelectHandler}
+          selectedValue={pageOptions.split}
+          options={splitOptions}
+          disabled={isUploading === 'processing'}
+        />
+      </StyledFormControl>
+      <label htmlFor="pdf-upload">
+        <StyledFormControl>
+          <StyledInput
+            accept=".pdf"
+            type="file"
+            id="pdf-upload"
+            data-testid="pdf-upload"
+            onChange={fileUploadHandler}
+            onClick={clearUploadedFileHandler}
           />
-        </CustomisedFormControl>
-        <CustomisedFormControl>
-          <Select
-            title="Page Options"
-            selectHandler={splitOptionSelectHandler}
-            selectedValue={pageOptions.split}
-            options={splitOptions}
-            disabled={isUploading === 'processing'}
-          />
-        </CustomisedFormControl>
-        <label htmlFor="pdf-upload">
-          <CustomisedFormControl>
-            <CustomisedInput
-              accept=".pdf"
-              type="file"
-              id="pdf-upload"
-              data-testid="pdf-upload"
-              onChange={fileUploadHandler}
-              onClick={clearUploadedFileHandler}
-            />
-            <Button
-              variant="outlined"
-              component="span"
-              endIcon={<UploadFile />}
-              disabled={isUploading === 'processing'}
-            >
-              {fileName}
-            </Button>
-          </CustomisedFormControl>
-        </label>
-        <CustomisedFormControl>
-          <LoadingButton
-            loading={isUploading === 'processing'}
-            variant="contained"
-            endIcon={<Send />}
-            disabled={!(pageName && pageOptions && file)}
-            type="submit"
-          >
-            Submit
-          </LoadingButton>
-        </CustomisedFormControl>
-      </CustomisedCard>
-      <Snackbar
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        open={showNotification}
-        autoHideDuration={4000}
-        onClose={closeNotificationHandler}
-      >
-        <Alert severity={notificationDetail.severity} sx={{ width: '100%' }}>
-          {notificationDetail.message}
-        </Alert>
-      </Snackbar>
-    </form>
+          <Button variant="outlined" component="span" endIcon={<UploadFile />} disabled={isUploading === 'processing'}>
+            {fileName}
+          </Button>
+        </StyledFormControl>
+      </label>
+      <StyledFormControl>
+        <LoadingButton
+          loading={isUploading === 'processing'}
+          variant="contained"
+          endIcon={<Send />}
+          disabled={!(pageName && pageOptions && file)}
+          type="submit"
+        >
+          Submit
+        </LoadingButton>
+      </StyledFormControl>
+    </Interface>
   );
 };
 

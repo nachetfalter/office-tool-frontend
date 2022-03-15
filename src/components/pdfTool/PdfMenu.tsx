@@ -1,7 +1,7 @@
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import MergeIcon from '@mui/icons-material/Merge';
 import { useNavigate } from 'react-router-dom';
-import ButtonMenu from './../../common/ButtonMenu';
+import ButtonMenu from '../../common/ButtonMenu';
 
 const PdfInterface = (): JSX.Element => {
   const navigate = useNavigate();
